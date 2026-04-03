@@ -218,25 +218,53 @@ class SocketService {
 
   emit<K extends keyof SocketEvents>(event: K, data?: SocketEvents[K]) {
     if (!this.socket) {
-      console.warn(`Socket not initialized for event: ${event}`);
+      console.warn(`⚠️ Socket not initialized for event: ${event}`, data);
       return;
     }
     
-    if (!this.socket.connected) {
-      console.warn(`Socket not connected yet for event: ${event}, queuing...`);
-      // Wait briefly for connection
-      if (this.connectionPromise) {
-        this.connectionPromise.then(() => {
-          if (this.socket?.connected) {
-            console.log(`📤 Emitting queued event: ${event}`);
-            this.socket!.emit(event as string, data);
-          }
-        });
-      }
+    // If socket is connected, emit immediately
+    if (this.socket.connected) {
+      console.log(`📤 Socket connected, emitting event: ${event}`, data);
+      this.socket.emit(event as string, data);
       return;
     }
     
-    this.socket.emit(event as string, data);
+    // Socket exists but NOT connected - try to queue
+    console.warn(`⚠️ Socket not connected for event: ${event}, attempting to queue...`, { 
+      socketId: this.socket.id,
+      hasConnectionPromise: !!this.connectionPromise,
+      data 
+    });
+    
+    if (this.connectionPromise) {
+      // Connection is in progress - wait for it
+      this.connectionPromise.then(() => {
+        if (this.socket?.connected) {
+          console.log(`📤 Emitting queued event after reconnect: ${event}`);
+          this.socket!.emit(event as string, data);
+        } else {
+          console.error(`❌ Socket still not connected after promise resolved for event: ${event}`);
+        }
+      }).catch(err => {
+        console.error(`❌ Connection promise rejected for event: ${event}`, err);
+      });
+    } else {
+      // No connection promise - socket dropped but might reconnect via auto-reconnect
+      // Queue it by manually polling for connection
+      let retries = 0;
+      const maxRetries = 20; // 20 * 250ms = 5 seconds
+      const retryInterval = setInterval(() => {
+        retries++;
+        if (this.socket?.connected) {
+          console.log(`📤 Emitting queued event after manual retry (attempt ${retries}): ${event}`);
+          this.socket.emit(event as string, data);
+          clearInterval(retryInterval);
+        } else if (retries >= maxRetries) {
+          console.error(`❌ Gave up queuing event after ${maxRetries} retries: ${event}`);
+          clearInterval(retryInterval);
+        }
+      }, 250);
+    }
   }
 
   // Session management

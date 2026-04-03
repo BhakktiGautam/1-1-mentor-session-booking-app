@@ -401,12 +401,30 @@ export default function SessionPage() {
 
         // CRITICAL: Join the session room so we receive WebRTC events
         console.log('🚪 Joining session room...');
-        socketService.emit('session:join', {
+        console.log('📊 Socket connection status before join:', {
+          isConnected: socketService.isConnected(),
+          socketId: (socketService as any).socket?.id,
+          sessionId,
+          userId: currentUser?.id,
+          userName: currentUser?.name
+        });
+        
+        // Emit and ensure it's sent (with retry if needed)
+        const joinData = {
           sessionId,
           userId: currentUser?.id,
           userName: currentUser?.name || 'User',
-        } as any);
-        console.log('✅ Session room join emitted');
+        };
+        socketService.emit('session:join', joinData as any);
+        console.log('✅ Session room join emitted:', joinData);
+        
+        // Verify the emit went through
+        setTimeout(() => {
+          console.log('📊 Post-join socket status:', {
+            isConnected: socketService.isConnected(),
+            socketId: (socketService as any).socket?.id,
+          });
+        }, 100);
 
         // Start local video (this will setup socket listeners)
         console.log('📹 Starting local video...');
