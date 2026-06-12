@@ -306,8 +306,8 @@ class SocketService {
     this.currentSessionId = null;
   }
 
-  endSession(sessionId: string) {
-    this.emit('session:end', { sessionId } as any);
+  endSession(sessionId: string, mentorId?: string, studentId?: string) {
+    this.emit('session:ended', { sessionId, mentorId, studentId } as any);
   }
 
   // Chat
