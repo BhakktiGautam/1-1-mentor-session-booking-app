@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { Server as SocketIOServer } from 'socket.io';
 import { query, queryOne, transaction } from '@/database';
 import authMiddleware, { AuthRequest } from '@/middleware/auth';
+import { requireRole } from '@/middleware/requireRole';
 import { v4 as uuidv4 } from 'uuid';
 
 class HttpError extends Error {
@@ -20,8 +21,8 @@ export function setSocketIO(socketIO: SocketIOServer) {
   io = socketIO;
 }
 
-// Create session
-router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Create session (mentor only)
+router.post('/', authMiddleware, requireRole('mentor'), async (req: AuthRequest, res: Response) => {
   try {
     const { title, description, topic, scheduled_at, duration_minutes, language, code_language } =
       req.body;
@@ -142,15 +143,11 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Join session
-router.post('/:id/join', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Join session (student only)
+router.post('/:id/join', authMiddleware, requireRole('student'), async (req: AuthRequest, res: Response) => {
   try {
     const now = new Date().toISOString();
     const studentId = req.user?.id;
-
-    if (req.user?.role !== 'student') {
-      return res.status(403).json({ error: 'Only students can join sessions' });
-    }
 
     const sessionData = await transaction(async (client) => {
       // Lock the row exclusively — concurrent requests for the same session block here
@@ -204,8 +201,8 @@ router.post('/:id/join', authMiddleware, async (req: AuthRequest, res: Response)
   }
 });
 
-// End session
-router.post('/:id/end', authMiddleware, async (req: AuthRequest, res: Response) => {
+// End session (mentor only)
+router.post('/:id/end', authMiddleware, requireRole('mentor'), async (req: AuthRequest, res: Response) => {
   try {
     const now = new Date().toISOString();
 
