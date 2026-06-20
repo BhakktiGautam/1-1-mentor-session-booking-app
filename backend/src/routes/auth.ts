@@ -114,7 +114,7 @@ router.post('/login', loginLimiter, async (req: AuthRequest, res: Response) => {
 
     // Find user
     const user = await queryOne(
-      'SELECT id, email, name, role FROM users WHERE email = $1',
+      'SELECT id, email, name, role, is_suspended, suspension_reason FROM users WHERE email = $1',
       [email]
     );
 
@@ -143,6 +143,15 @@ router.post('/login', loginLimiter, async (req: AuthRequest, res: Response) => {
     }
 
     console.log('✅ Password verified successfully for user:', email);
+
+    if (user.is_suspended) {
+      console.warn('⚠️  Login attempt for suspended user:', email);
+      return res.status(403).json({
+        error: user.suspension_reason
+          ? `Account suspended: ${user.suspension_reason}`
+          : 'Account suspended',
+      });
+    }
 
     // Generate JWT token
     const token = jwt.sign(

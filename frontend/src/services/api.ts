@@ -294,6 +294,12 @@ class ApiClient {
     return this.client.get(`/admin/users?${params.toString()}`);
   }
 
+  async getAdminSessions(status?: string): Promise<ApiResponse<any[]>> {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    return this.client.get(`/admin/sessions?${params.toString()}`);
+  }
+
   async suspendUser(userId: string, reason: string): Promise<ApiResponse<any>> {
     return this.client.patch(`/admin/users/${userId}/suspend`, { isSuspended: true, reason });
   }

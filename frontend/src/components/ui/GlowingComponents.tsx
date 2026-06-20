@@ -100,13 +100,14 @@ export function Badge({
   className = '',
 }: {
   children: React.ReactNode;
-  color?: 'purple' | 'green' | 'yellow';
+  color?: 'purple' | 'green' | 'yellow' | 'red';
   className?: string;
 }) {
   const colorClasses = {
     purple: 'bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 border-primary-300 dark:border-primary-700/50',
     green: 'bg-secondary-100 dark:bg-secondary-900/50 text-secondary-700 dark:text-secondary-300 border-secondary-300 dark:border-secondary-700/50',
     yellow: 'bg-accent-100 dark:bg-accent-900/50 text-accent-700 dark:text-accent-300 border-accent-300 dark:border-accent-700/50',
+    red: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700/50',
   };
 
   return (

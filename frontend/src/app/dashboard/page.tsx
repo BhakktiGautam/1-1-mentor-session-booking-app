@@ -100,6 +100,13 @@ export default function DashboardPage() {
                 </GlowingButton>
               </Link>
             )}
+            {user?.role === 'admin' && (
+              <Link href="/admin">
+                <GlowingButton variant="primary" className="text-xs md:text-sm py-1.5 md:py-2">
+                  🛡️ Admin
+                </GlowingButton>
+              </Link>
+            )}
           </nav>
         </div>
       </header>
