@@ -51,6 +51,13 @@ export interface ExtendedSession extends Session {
 // Message Types
 export type MessageType = 'text' | 'code_snippet' | 'system';
 
+export interface MessageAttachment {
+  url: string;
+  type: string;
+  name: string;
+  size?: number;
+}
+
 export interface Message {
   id: string;
   session_id: string;
@@ -58,6 +65,7 @@ export interface Message {
   content: string;
   type: MessageType;
   code_snippet?: string;
+  attachment?: MessageAttachment;
   created_at: string;
   user?: User;
 }
@@ -110,7 +118,7 @@ export interface SocketEvents {
   'selection:change': { start: { line: number; column: number }; end: { line: number; column: number } };
 
   // Chat Events
-  'message:send': { content: string; type: MessageType };
+  'message:send': { content: string; type: MessageType; attachment?: MessageAttachment };
   'message:receive': Message;
 
   // Video Events
